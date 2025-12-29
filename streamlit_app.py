@@ -42,7 +42,7 @@ if not df_raw.empty:
     
     # County Filter
     all_counties = sorted(df_raw['County'].unique().astype(str))
-    selected_counties = st.sidebar.multiselect("Select Counties", all_counties, default=all_counties[:3] if len(all_counties) > 3 else all_counties)
+    selected_counties = st.sidebar.multiselect("Select Counties", all_counties )#, default=all_counties[:3] if len(all_counties) > 3 else all_counties)
     
     # Description Filter
     # Map 1/0 back to text for display if needed, or just use as is. 

@@ -35,7 +35,7 @@ def plot_median_price_trend(df):
     """V2: The Inflation Tracker - Median Price Line Chart"""
     # Group by Sale_Year and Sale_Month to create a date for plotting
     df_grouped = df.groupby(['Sale_Year', 'Sale_Month'])['Price'].median().reset_index()
-    df_grouped['Date'] = pd.to_datetime(df_grouped[['Sale_Year', 'Sale_Month']].assign(day=1))
+    df_grouped['Date'] = df_grouped.apply(lambda row: f"{int(row['Sale_Year'])}-{int(row['Sale_Month']):02d}-01", axis=1)
     
     fig = px.line(df_grouped, x='Date', y='Price', title='Median Price Trend Over Time')
     return fig
@@ -200,7 +200,7 @@ def plot_temporal_ridgeline(df):
     """V16: Temporal Ridgeline Plot"""
     # Use Violin plot as Ridgeline proxy in standard Plotly Express, or create manually with GO
     # We'll use a violin plot split by year for simplicity and effectiveness
-    fig = px.violin(df, x='Price', y='Sale_Year', orientation='h', side='positive', title='Price Distribution Over Time')
+    fig = px.violin(df, x='Price', y='Sale_Year', orientation='h', title='Price Distribution Over Time')
     return fig
 
 # Module D: Attribute Correlations
@@ -238,14 +238,15 @@ def plot_market_composition_sunburst(df):
 def plot_parallel_coordinates(df):
     """V21: Multivariate Parallel Coordinates"""
     # Need to encode categorical variables
-    df_sample = df.sample(min(1000, len(df))) # Sample for performance
+    #df_sample = df.sample(min(1000, len(df))) # Sample for performance
+    df_sample = df
     
     # Simple encoding
     df_sample['County_Code'] = df_sample['County'].astype('category').cat.codes
     df_sample['Size_Code'] = df_sample['Property_Size_Description'].astype('category').cat.codes
     
     fig = px.parallel_coordinates(df_sample, 
-                                  dimensions=['County_Code', 'Size_Code', 'VAT_Exclusive', 'Price'],
+                                  dimensions=['County_Code', 'Size_Code', 'Sale_Month', 'Price'],
                                   color="Price", 
                                   title='Multivariate Parallel Coordinates')
     return fig
