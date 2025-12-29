@@ -100,51 +100,119 @@ def plot_premium_postcode_ranking(df):
     
     return fig
 
+COUNTY_CENTROIDS = {
+    'Carlow': (52.70, -6.80), 'Cavan': (53.99, -7.36), 'Clare': (52.90, -9.00),
+    'Cork': (51.90, -8.47), 'Donegal': (54.91, -7.75), 'Dublin': (53.35, -6.26),
+    'Galway': (53.27, -9.05), 'Kerry': (52.15, -9.56), 'Kildare': (53.16, -6.82),
+    'Kilkenny': (52.65, -7.24), 'Laois': (53.03, -7.30), 'Leitrim': (54.12, -8.00),
+    'Limerick': (52.66, -8.62), 'Longford': (53.72, -7.80), 'Louth': (53.89, -6.49),
+    'Mayo': (53.90, -9.26), 'Meath': (53.60, -6.65), 'Monaghan': (54.24, -6.97),
+    'Offaly': (53.23, -7.71), 'Roscommon': (53.76, -8.24), 'Sligo': (54.27, -8.47),
+    'Tipperary': (52.47, -7.90), 'Waterford': (52.25, -7.11), 'Westmeath': (53.53, -7.46),
+    'Wexford': (52.33, -6.46), 'Wicklow': (53.00, -6.30)
+}
+
 def plot_national_price_choropleth(df):
-    """V8: National Price Choropleth"""
-    # Without GeoJSON, we can't do a real choropleth. We'll return a message or a simple bar map.
-    # Placeholder for map
-    # fig = px.choropleth(...) 
-    # return fig
-    return None # Placeholder
+    """V8: National Price Choropleth (County)"""
+    # Group by County
+    df_grouped = df.groupby('County')['Price'].median().reset_index()
+    
+    # Standardize County text for matching with GeoJSON
+    # OSi 'ENGLISH' property is typically UPPERCASE (e.g. 'DUBLIN', 'CORK')
+    df_grouped['County_Match'] = df_grouped['County'].str.upper().str.strip()
+    
+    # Official OSi Counties GeoJSON (2019)
+    geojson_url = "https://data-osi.opendata.arcgis.com/api/download/v1/items/d81188d16e804bde81548e982e80c53e/geojson?layers=0"
+    
+    fig = px.choropleth_mapbox(
+        df_grouped,
+        geojson=geojson_url,
+        locations='County_Match',
+        featureidkey='properties.ENGLISH', # Matches 'DUBLIN', 'KILKENNY' etc.
+        color='Price',
+        color_continuous_scale="Viridis",
+        range_color=(df_grouped['Price'].quantile(0.05), df_grouped['Price'].quantile(0.95)),
+        mapbox_style="carto-positron",
+        zoom=5.5,
+        center = {"lat": 53.4, "lon": -7.9},
+        opacity=0.6,
+        labels={'Price': 'Median Price (€)', 'County_Match': 'County'}, # Label in tooltip
+        hover_name='County', # Show nice Title Case name in hover
+        title="National Median Price by County"
+    )
+    return fig
 
 def plot_hyper_local_scatter(df):
     """V9: Hyper-Local Scatter Mapbox"""
-    # Requires Lat/Lon. If missing, return None or empty map.
-    if 'Latitude' in df.columns and 'Longitude' in df.columns:
-        fig = px.scatter_mapbox(df, lat="Latitude", lon="Longitude", color="Price", size="Price",
-                          color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=6,
-                          mapbox_style="carto-positron")
-        return fig
-    return None
+    # Check if geolocation data exists, if not, synthesize it from County
+    plot_df = df.copy()
+    
+    if 'Latitude' not in plot_df.columns or 'Longitude' not in plot_df.columns:
+        # Map centroids
+        plot_df['Coords'] = plot_df['County'].map(COUNTY_CENTROIDS)
+        
+        # Drop rows where County is unknown or unmapped
+        plot_df = plot_df.dropna(subset=['Coords'])
+        
+        if plot_df.empty:
+            return None
+            
+        plot_df['Latitude'] = plot_df['Coords'].apply(lambda x: x[0])
+        plot_df['Longitude'] = plot_df['Coords'].apply(lambda x: x[1])
+        
+        # Add Jitter to simulate hyper-local spread (roughly 3-4km spread)
+        # Using numpy for vectorized addition
+        np.random.seed(42) # For consistent results
+        plot_df['Latitude'] += np.random.normal(0, 0.04, size=len(plot_df))
+        plot_df['Longitude'] += np.random.normal(0, 0.04, size=len(plot_df))
+    
+    fig = px.scatter_mapbox(plot_df, lat="Latitude", lon="Longitude", color="Price", size="Price",
+                      color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=6,
+                      mapbox_style="carto-positron",
+                      hover_data=['Address', 'County', 'Price'],
+                      title="Hyper-Local Sales Scatter (Simulated Locations)")
+    return fig
 
 def plot_urban_density_hexagon(df):
     """V10: Urban Density Hexagon Layer"""
-    # Needs Lat/Lon
-    if 'Latitude' in df.columns and 'Longitude' in df.columns:
-        layer = pdk.Layer(
-            'HexagonLayer',
-            df,
-            get_position='[Longitude, Latitude]',
-            auto_highlight=True,
-            elevation_scale=50,
-            pickable=True,
-            elevation_range=[0, 3000],
-            extruded=True,
-            coverage=1
-        )
-        view_state = pdk.ViewState(
-            longitude=df['Longitude'].mean(),
-            latitude=df['Latitude'].mean(),
-            zoom=6,
-            min_zoom=5,
-            max_zoom=15,
-            pitch=40.5,
-            bearing=-27.36
-        )
-        deck = pdk.Deck(layers=[layer], initial_view_state=view_state)
-        return deck
-    return None
+    plot_df = df.copy()
+
+    # Synthesize data if missing
+    if 'Latitude' not in plot_df.columns or 'Longitude' not in plot_df.columns:
+         plot_df['Coords'] = plot_df['County'].map(COUNTY_CENTROIDS)
+         plot_df = plot_df.dropna(subset=['Coords'])
+         if plot_df.empty:
+             return None
+         
+         plot_df['Latitude'] = plot_df['Coords'].apply(lambda x: x[0])
+         plot_df['Longitude'] = plot_df['Coords'].apply(lambda x: x[1])
+         
+         np.random.seed(42)
+         plot_df['Latitude'] += np.random.normal(0, 0.04, size=len(plot_df))
+         plot_df['Longitude'] += np.random.normal(0, 0.04, size=len(plot_df))
+
+    layer = pdk.Layer(
+        'HexagonLayer',
+        plot_df,
+        get_position='[Longitude, Latitude]',
+        auto_highlight=True,
+        elevation_scale=50,
+        pickable=True,
+        elevation_range=[0, 3000],
+        extruded=True,
+        coverage=1
+    )
+    view_state = pdk.ViewState(
+        longitude=plot_df['Longitude'].mean(),
+        latitude=plot_df['Latitude'].mean(),
+        zoom=6,
+        min_zoom=5,
+        max_zoom=15,
+        pitch=40.5,
+        bearing=-27.36
+    )
+    deck = pdk.Deck(layers=[layer], initial_view_state=view_state, tooltip={"text": "Count: {elevationValue}"})
+    return deck
 
 def plot_provincial_treemap(df):
     """V11: Provincial Treemap"""
