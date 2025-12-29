@@ -246,7 +246,7 @@ def plot_parallel_coordinates(df):
     df_sample['Size_Code'] = df_sample['Property_Size_Description'].astype('category').cat.codes
     
     fig = px.parallel_coordinates(df_sample, 
-                                  dimensions=['County_Code', 'Size_Code', 'Sale_Month', 'Price'],
+                                  dimensions=['County_Code', 'Sale_Year', 'Sale_Month', 'Price'],
                                   color="Price", 
                                   title='Multivariate Parallel Coordinates')
     return fig

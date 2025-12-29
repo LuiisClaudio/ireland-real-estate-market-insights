@@ -51,9 +51,16 @@ if not df_raw.empty:
     selected_prop_type_label = st.sidebar.selectbox("Property Type", list(prop_type_options.keys()))
     selected_prop_type_val = prop_type_options[selected_prop_type_label]
 
+    # Price Filter
+    min_price = int(df_raw['Price'].min())
+    max_price = int(df_raw['Price'].max())
+    max_price = 1000000
+    selected_price_range = st.sidebar.slider("Select Price Range (€)", min_price, max_price, (min_price, max_price))
+
     # Apply Filters
     df = df_raw.copy()
     df = df[(df['Sale_Year'] >= selected_years[0]) & (df['Sale_Year'] <= selected_years[1])]
+    df = df[(df['Price'] >= selected_price_range[0]) & (df['Price'] <= selected_price_range[1])]
     
     if selected_counties:
         df = df[df['County'].isin(selected_counties)]
