@@ -113,32 +113,38 @@ COUNTY_CENTROIDS = {
 }
 
 def plot_national_price_choropleth(df):
-    """V8: National Price Choropleth (County)"""
-    # Group by County
-    df_grouped = df.groupby('County')['Price'].median().reset_index()
+    """V8: National Price Scatter Map (Replaced Choropleth)"""
+    # Group by County and calculate Mean Price
+    df_grouped = df.groupby('County')['Price'].mean().reset_index()
     
-    # Standardize County text for matching with GeoJSON
-    # OSi 'ENGLISH' property is typically UPPERCASE (e.g. 'DUBLIN', 'CORK')
-    df_grouped['County_Match'] = df_grouped['County'].str.upper().str.strip()
+    # Extract Lat/Lon from County Centroids
+    # Using the global COUNTY_CENTROIDS dictionary
+    df_grouped['Coords'] = df_grouped['County'].map(COUNTY_CENTROIDS)
     
-    # Official OSi Counties GeoJSON (2019)
-    geojson_url = "https://data-osi.opendata.arcgis.com/api/download/v1/items/d81188d16e804bde81548e982e80c53e/geojson?layers=0"
+    # Drop rows where County is unknown or mapping failed
+    df_grouped = df_grouped.dropna(subset=['Coords'])
     
-    fig = px.choropleth_mapbox(
+    if df_grouped.empty:
+        return None
+        
+    df_grouped['Latitude'] = df_grouped['Coords'].apply(lambda x: x[0])
+    df_grouped['Longitude'] = df_grouped['Coords'].apply(lambda x: x[1])
+    
+    fig = px.scatter_mapbox(
         df_grouped,
-        geojson=geojson_url,
-        locations='County_Match',
-        featureidkey='properties.ENGLISH', # Matches 'DUBLIN', 'KILKENNY' etc.
-        color='Price',
+        lat="Latitude",
+        lon="Longitude",
+        size="Price",
+        color="Price",
         color_continuous_scale="Viridis",
-        range_color=(df_grouped['Price'].quantile(0.05), df_grouped['Price'].quantile(0.95)),
-        mapbox_style="carto-positron",
+        size_max=30,
         zoom=5.5,
-        center = {"lat": 53.4, "lon": -7.9},
-        opacity=0.6,
-        labels={'Price': 'Median Price (€)', 'County_Match': 'County'}, # Label in tooltip
-        hover_name='County', # Show nice Title Case name in hover
-        title="National Median Price by County"
+        center={"lat": 53.4, "lon": -7.9},
+        mapbox_style="carto-positron",
+        hover_name='County',
+        hover_data={'Latitude': False, 'Longitude': False, 'Price': ':.0f'},
+        labels={'Price': 'Mean Price (€)'},
+        title="National Mean Price by County (Centroids)"
     )
     return fig
 
