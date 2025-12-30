@@ -5,6 +5,35 @@ import numpy as np
 import pydeck as pdk
 import streamlit as st
 
+# --- DESIGN SYSTEM ---
+# Premium Teal/Slate Color Palette
+PREMIUM_COLOR_SEQUENCE = [
+    '#264653', # Charcoal/Deep Teal (Primary)
+    '#2a9d8f', # Persian Green (Secondary)
+    '#e9c46a', # Saffron (Highlight)
+    '#f4a261', # Sandy Brown
+    '#e76f51', # Burnt Sienna (Alert/Important)
+    '#1A2C42', # Deep Indices
+    '#8AB17D', # Sage
+    '#6d597a'  # Dusty Purple
+]
+
+# Continuous Scale for Heatmaps/Choropleths
+PREMIUM_SCALE = px.colors.sequential.Tealgrn # Elegant Green/Teal gradient
+
+# Standard Layout Template
+def update_layout_premium(fig, title):
+    fig.update_layout(
+        title=title,
+        template='plotly_white',
+        colorway=PREMIUM_COLOR_SEQUENCE,
+        xaxis_title=None,
+        yaxis_title=None,
+        font=dict(family="Inter, sans-serif"),
+        hovermode="x unified"
+    )
+    return fig
+
 # Helper to map counties to provinces
 def get_province(county):
     leinster = ['Carlow', 'Dublin', 'Kildare', 'Kilkenny', 'Laois', 'Longford', 'Louth', 'Meath', 'Offaly', 'Westmeath', 'Wexford', 'Wicklow']
@@ -37,8 +66,12 @@ def plot_median_price_trend(df):
     df_grouped = df.groupby(['Sale_Year', 'Sale_Month'])['Price'].median().reset_index()
     df_grouped['Date'] = df_grouped.apply(lambda row: f"{int(row['Sale_Year'])}-{int(row['Sale_Month']):02d}-01", axis=1)
     
-    fig = px.line(df_grouped, x='Date', y='Price', title='Median Price Trend Over Time')
-    return fig
+    fig = px.line(df_grouped, x='Date', y='Price', title='Median Price Trend Over Time', 
+                  color_discrete_sequence=PREMIUM_COLOR_SEQUENCE)
+    
+    # Fill area under line for "Premium" feel
+    fig.update_traces(fill='tozeroy', line=dict(width=3))
+    return update_layout_premium(fig, 'Median Price Trend Over Time')
 
 def plot_regional_divergence(df):
     """V3: Regional Divergence Multi-Line Chart"""
@@ -46,34 +79,45 @@ def plot_regional_divergence(df):
     df_filtered = df[df['County'].isin(top_counties)]
     df_grouped = df_filtered.groupby(['Sale_Year', 'County'])['Price'].median().reset_index()
     
-    fig = px.line(df_grouped, x='Sale_Year', y='Price', color='County', title='Median Price Trends by Top Counties')
-    return fig
+    fig = px.line(df_grouped, x='Sale_Year', y='Price', color='County', 
+                  title='Median Price Trends by Top Counties',
+                  color_discrete_sequence=PREMIUM_COLOR_SEQUENCE)
+    return update_layout_premium(fig, 'Median Price Trends by Top Counties')
 
 def plot_seasonality(df):
     """V4: Seasonality Bar Chart"""
     df_grouped = df.groupby('Sale_Month').size().reset_index(name='Transactions')
-    fig = px.bar(df_grouped, x='Sale_Month', y='Transactions', title='Seasonality of Transactions')
-    return fig
+    fig = px.bar(df_grouped, x='Sale_Month', y='Transactions', title='Seasonality of Transactions',
+                 color='Transactions', color_continuous_scale=PREMIUM_SCALE)
+    return update_layout_premium(fig, 'Seasonality of Transactions')
 
 def plot_market_heatmap(df):
     """V5: Market Heatmap"""
     df_grouped = df.groupby(['Sale_Year', 'Sale_Month']).size().reset_index(name='Volume')
-    fig = px.density_heatmap(df_grouped, x='Sale_Month', y='Sale_Year', z='Volume', title='Market Activity Heatmap',
-                             nbinsx=12, nbinsy=len(df['Sale_Year'].unique()))
-    return fig
+    fig = px.density_heatmap(df_grouped, x='Sale_Month', y='Sale_Year', z='Volume', 
+                             title='Market Activity Heatmap',
+                             nbinsx=12, nbinsy=len(df['Sale_Year'].unique()),
+                             color_continuous_scale=PREMIUM_SCALE)
+    return update_layout_premium(fig, 'Market Activity Heatmap')
 
 def plot_volume_price_correlation(df):
     """V6: Volume-Price Correlation Dual-Axis Chart"""
     df_grouped = df.groupby('Sale_Year').agg({'Price': 'median', 'Date_of_Sale': 'count'}).rename(columns={'Date_of_Sale': 'Volume'}).reset_index()
     
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=df_grouped['Sale_Year'], y=df_grouped['Volume'], name='Volume', yaxis='y2', opacity=0.3))
-    fig.add_trace(go.Scatter(x=df_grouped['Sale_Year'], y=df_grouped['Price'], name='Median Price', yaxis='y1'))
+    # Use Primary color for Price (Line) and Secondary/Muted for Volume (Bar)
+    fig.add_trace(go.Bar(x=df_grouped['Sale_Year'], y=df_grouped['Volume'], name='Volume', yaxis='y2', 
+                         opacity=0.3, marker_color=PREMIUM_COLOR_SEQUENCE[1]))
+    fig.add_trace(go.Scatter(x=df_grouped['Sale_Year'], y=df_grouped['Price'], name='Median Price', yaxis='y1',
+                             line=dict(color=PREMIUM_COLOR_SEQUENCE[0], width=3)))
     
     fig.update_layout(
         title='Volume vs Price Correlation',
+        template='plotly_white',
         yaxis=dict(title='Median Price'),
-        yaxis2=dict(title='Volume', overlaying='y', side='right')
+        yaxis2=dict(title='Volume', overlaying='y', side='right', showgrid=False),
+        colorway=PREMIUM_COLOR_SEQUENCE,
+        font=dict(family="Inter, sans-serif")
     )
     return fig
 
@@ -81,24 +125,23 @@ def plot_volume_price_correlation(df):
 
 def plot_premium_postcode_ranking(df):
     """V7: The Premium Postcode Ranking"""
-    # Using 'Address' or extract postcode if available. Here we assume Address might contain area info. 
-    # For simplicity, we'll calculate by County if fine-grained location isn't easily extractable, 
-    # but the prompt asks for Address/Eircode Routing Keys.
-    # Note: Eircode is sparse. We will try to extract routing keys from Eircode if present.
     
     df['RoutingKey'] = df['Eircode'].astype(str).str[:3]
     valid_keys = df[df['RoutingKey'].str.len() == 3]
     
     if valid_keys.empty:
-         # Fallback to top areas in Address if no Eircodes
-         # Minimal fallback: just use County
          df_grouped = df.groupby('County')['Price'].median().sort_values(ascending=True).tail(20)
-         fig = px.bar(df_grouped, orientation='h', title='Top Areas by Median Price (County Fallback due to missing Eircodes)')
+         title = 'Top Areas by Median Price (County Fallback)'
+         y_col = df_grouped.index
     else:
         df_grouped = valid_keys.groupby('RoutingKey')['Price'].median().sort_values(ascending=True).tail(20)
-        fig = px.bar(df_grouped, orientation='h', title='Top Routing Keys by Median Price')
+        title = 'Top Routing Keys by Median Price'
+        y_col = df_grouped.index
     
-    return fig
+    fig = px.bar(x=df_grouped.values, y=y_col, orientation='h', title=title,
+                 color=df_grouped.values, color_continuous_scale=PREMIUM_SCALE)
+    fig.update_layout(xaxis_title="Median Price (€)", yaxis_title="Area")
+    return update_layout_premium(fig, title)
 
 COUNTY_CENTROIDS = {
     'Carlow': (52.70, -6.80), 'Cavan': (53.99, -7.36), 'Clare': (52.90, -9.00),
@@ -114,89 +157,61 @@ COUNTY_CENTROIDS = {
 
 def plot_national_price_choropleth(df):
     """V8: National Price Scatter Map (Replaced Choropleth)"""
-    # Group by County and calculate Mean Price
     df_grouped = df.groupby('County')['Price'].mean().reset_index()
-    
-    # Extract Lat/Lon from County Centroids
-    # Using the global COUNTY_CENTROIDS dictionary
     df_grouped['Coords'] = df_grouped['County'].map(COUNTY_CENTROIDS)
-    
-    # Drop rows where County is unknown or mapping failed
     df_grouped = df_grouped.dropna(subset=['Coords'])
     
-    if df_grouped.empty:
-        return None
+    if df_grouped.empty: return None
         
     df_grouped['Latitude'] = df_grouped['Coords'].apply(lambda x: x[0])
     df_grouped['Longitude'] = df_grouped['Coords'].apply(lambda x: x[1])
     
     fig = px.scatter_mapbox(
         df_grouped,
-        lat="Latitude",
-        lon="Longitude",
-        size="Price",
-        color="Price",
-        color_continuous_scale="Viridis",
-        size_max=30,
-        zoom=5.5,
-        center={"lat": 53.4, "lon": -7.9},
+        lat="Latitude", lon="Longitude", size="Price", color="Price",
+        color_continuous_scale=PREMIUM_SCALE,
+        size_max=30, zoom=5.5, center={"lat": 53.4, "lon": -7.9},
         mapbox_style="carto-positron",
         hover_name='County',
-        hover_data={'Latitude': False, 'Longitude': False, 'Price': ':.0f'},
-        labels={'Price': 'Mean Price (€)'},
-        title="National Mean Price by County (Centroids)"
+        title="National Mean Price by County"
     )
-    return fig
+    return update_layout_premium(fig, "National Mean Price by County")
 
 def plot_hyper_local_scatter(df):
     """V9: Hyper-Local Scatter Mapbox"""
-    # Check if geolocation data exists, if not, synthesize it from County
     plot_df = df.copy()
     
     if 'Latitude' not in plot_df.columns or 'Longitude' not in plot_df.columns:
-        # Map centroids
         plot_df['Coords'] = plot_df['County'].map(COUNTY_CENTROIDS)
-        
-        # Drop rows where County is unknown or unmapped
         plot_df = plot_df.dropna(subset=['Coords'])
-        
-        if plot_df.empty:
-            return None
-            
+        if plot_df.empty: return None
         plot_df['Latitude'] = plot_df['Coords'].apply(lambda x: x[0])
         plot_df['Longitude'] = plot_df['Coords'].apply(lambda x: x[1])
-        
-        # Add Jitter to simulate hyper-local spread (roughly 3-4km spread)
-        # Using numpy for vectorized addition
-        np.random.seed(42) # For consistent results
+        np.random.seed(42)
         plot_df['Latitude'] += np.random.normal(0, 0.04, size=len(plot_df))
         plot_df['Longitude'] += np.random.normal(0, 0.04, size=len(plot_df))
     
     fig = px.scatter_mapbox(plot_df, lat="Latitude", lon="Longitude", color="Price", size="Price",
-                      color_continuous_scale=px.colors.cyclical.IceFire, size_max=15, zoom=6,
+                      color_continuous_scale=PREMIUM_SCALE, size_max=15, zoom=6,
                       mapbox_style="carto-positron",
-                      hover_data=['Address', 'County', 'Price'],
-                      title="Hyper-Local Sales Scatter (Simulated Locations)")
-    return fig
+                      title="Hyper-Local Sales Scatter")
+    return update_layout_premium(fig, "Hyper-Local Sales Scatter")
 
 def plot_urban_density_hexagon(df):
-    """V10: Urban Density Hexagon Layer"""
+    """V10: Urban Density Hexagon Layer (PyDeck - No Theme Update needed but ensuring colors align)"""
     plot_df = df.copy()
 
-    # Synthesize data if missing
     if 'Latitude' not in plot_df.columns or 'Longitude' not in plot_df.columns:
          plot_df['Coords'] = plot_df['County'].map(COUNTY_CENTROIDS)
          plot_df = plot_df.dropna(subset=['Coords'])
-         if plot_df.empty:
-             return None
-         
+         if plot_df.empty: return None
          plot_df['Latitude'] = plot_df['Coords'].apply(lambda x: x[0])
          plot_df['Longitude'] = plot_df['Coords'].apply(lambda x: x[1])
-         
          np.random.seed(42)
          plot_df['Latitude'] += np.random.normal(0, 0.04, size=len(plot_df))
          plot_df['Longitude'] += np.random.normal(0, 0.04, size=len(plot_df))
 
+    # Using a teal color range for consistency
     layer = pdk.Layer(
         'HexagonLayer',
         plot_df,
@@ -206,7 +221,14 @@ def plot_urban_density_hexagon(df):
         pickable=True,
         elevation_range=[0, 3000],
         extruded=True,
-        coverage=1
+        coverage=1,
+        color_range=[
+            [237, 248, 251],
+            [178, 226, 226],
+            [102, 194, 164],
+            [44, 162, 95],
+            [0, 109, 44]
+        ]
     )
     view_state = pdk.ViewState(
         longitude=plot_df['Longitude'].mean(),
@@ -227,8 +249,9 @@ def plot_provincial_treemap(df):
     df_grouped.columns = ['Province', 'County', 'Volume', 'Median_Price']
     
     fig = px.treemap(df_grouped, path=['Province', 'County'], values='Volume', color='Median_Price',
-                     title='Provincial Market Treemap')
-    return fig
+                     title='Provincial Market Treemap',
+                     color_continuous_scale=PREMIUM_SCALE)
+    return update_layout_premium(fig, 'Provincial Market Treemap')
 
 # Module C: Distribution and Affordability
 
@@ -236,12 +259,12 @@ def plot_price_histogram(df, max_price=None):
     """V12: Price Histogram with Outlier Clipper"""
     if max_price:
         df = df[df['Price'] <= max_price]
-    fig = px.histogram(df, x='Price', nbins=50, title='Price Distribution')
-    return fig
+    fig = px.histogram(df, x='Price', nbins=50, title='Price Distribution',
+                       color_discrete_sequence=PREMIUM_COLOR_SEQUENCE)
+    return update_layout_premium(fig, 'Price Distribution')
 
 def plot_market_tier_donut(df):
     """V13: Market Tier Donut Chart"""
-    # Tier logic: <320k, 320k-400k, >400k
     conditions = [
         (df['Price'] < 320000),
         (df['Price'] >= 320000) & (df['Price'] <= 400000),
@@ -253,52 +276,59 @@ def plot_market_tier_donut(df):
     df_grouped = df['Tier'].value_counts().reset_index()
     df_grouped.columns = ['Tier', 'Count']
     
-    fig = px.pie(df_grouped, values='Count', names='Tier', hole=0.4, title='Market Segments')
-    return fig
+    fig = px.pie(df_grouped, values='Count', names='Tier', hole=0.4, title='Market Segments',
+                 color_discrete_sequence=PREMIUM_COLOR_SEQUENCE)
+    return update_layout_premium(fig, 'Market Segments')
 
 def plot_county_variance_box(df):
     """V14: County Variance Box Plots"""
-    fig = px.box(df, x='County', y='Price', title='Price Variance by County')
-    return fig
+    fig = px.box(df, x='County', y='Price', title='Price Variance by County',
+                 color='County', color_discrete_sequence=PREMIUM_COLOR_SEQUENCE)
+    fig.update_layout(showlegend=False)
+    return update_layout_premium(fig, 'Price Variance by County')
 
 def plot_new_vs_secondhand_violin(df):
     """V15: New vs. Second-Hand Violin Plot"""
-    # Description_of_Property: 1=New, 0=Second Hand
     df['Property Type'] = df['Description_of_Property'].map({1: 'New', 0: 'Second Hand', 'Unknown': 'Unknown'})
     df_filtered = df[df['Property Type'] != 'Unknown']
     
-    fig = px.violin(df_filtered, x='Property Type', y='Price', box=True, points="all", title='New vs Second-Hand Price Distribution')
-    return fig
+    fig = px.violin(df_filtered, x='Property Type', y='Price', box=True, points="all", 
+                    title='New vs Second-Hand Price Distribution',
+                    color='Property Type', color_discrete_sequence=PREMIUM_COLOR_SEQUENCE)
+    return update_layout_premium(fig, 'New vs Second-Hand Price Distribution')
 
 def plot_temporal_ridgeline(df):
     """V16: Temporal Ridgeline Plot"""
-    # Use Violin plot as Ridgeline proxy in standard Plotly Express, or create manually with GO
-    # We'll use a violin plot split by year for simplicity and effectiveness
-    fig = px.violin(df, x='Price', y='Sale_Year', orientation='h', title='Price Distribution Over Time')
-    return fig
+    fig = px.violin(df, x='Price', y='Sale_Year', orientation='h', 
+                    title='Price Distribution Over Time',
+                    color='Sale_Year', color_discrete_sequence=PREMIUM_SCALE) # Discrete scale from sequential
+    return update_layout_premium(fig, 'Price Distribution Over Time')
 
 # Module D: Attribute Correlations
 
 def plot_vat_status_composition(df):
     """V17: VAT Status Composition"""
     df_grouped = df['VAT_Exclusive'].value_counts().reset_index()
-    # 1=Yes, 0=No
     df_grouped.columns = ['VAT Exclusive', 'Count']
     df_grouped['VAT Exclusive'] = df_grouped['VAT Exclusive'].map({1: 'Yes', 0: 'No'})
     
-    fig = px.pie(df_grouped, values='Count', names='VAT Exclusive', title='VAT Status Composition')
-    return fig
+    fig = px.pie(df_grouped, values='Count', names='VAT Exclusive', title='VAT Status Composition',
+                 color_discrete_sequence=PREMIUM_COLOR_SEQUENCE)
+    return update_layout_premium(fig, 'VAT Status Composition')
 
 def plot_size_category_stacked_bar(df):
     """V18: Size Category Stacked Bar"""
     df_grouped = df.groupby(['Sale_Year', 'Property_Size_Description']).size().reset_index(name='Count')
-    fig = px.bar(df_grouped, x='Sale_Year', y='Count', color='Property_Size_Description', title='Property Size Distribution by Year')
-    return fig
+    fig = px.bar(df_grouped, x='Sale_Year', y='Count', color='Property_Size_Description', 
+                 title='Property Size Distribution by Year',
+                 color_discrete_sequence=PREMIUM_COLOR_SEQUENCE)
+    return update_layout_premium(fig, 'Property Size Distribution by Year')
 
 def plot_price_vs_size_scatter_matrix(df):
     """V19: Price vs. Size Scatter Matrix"""
-    fig = px.strip(df, x='Property_Size_Description', y='Price', title='Price vs Property Size Category')
-    return fig
+    fig = px.strip(df, x='Property_Size_Description', y='Price', title='Price vs Property Size Category',
+                   color='Property_Size_Description', color_discrete_sequence=PREMIUM_COLOR_SEQUENCE)
+    return update_layout_premium(fig, 'Price vs Property Size Category')
 
 def plot_market_composition_sunburst(df):
     """V20: Market Composition Sunburst"""
@@ -306,24 +336,22 @@ def plot_market_composition_sunburst(df):
     df['Property Type'] = df['Description_of_Property'].map({1: 'New', 0: 'Second Hand'})
     df = df.fillna('Unknown')
     
-    fig = px.sunburst(df, path=['Province', 'County', 'Property Type'], values='Price', title='Market Composition')
-    return fig
+    fig = px.sunburst(df, path=['Province', 'County', 'Property Type'], values='Price', 
+                      title='Market Composition',
+                      color='Price', color_continuous_scale=PREMIUM_SCALE)
+    return update_layout_premium(fig, 'Market Composition')
 
 def plot_parallel_coordinates(df):
     """V21: Multivariate Parallel Coordinates"""
-    # Need to encode categorical variables
-    #df_sample = df.sample(min(1000, len(df))) # Sample for performance
     df_sample = df
-    
-    # Simple encoding
     df_sample['County_Code'] = df_sample['County'].astype('category').cat.codes
-    df_sample['Size_Code'] = df_sample['Property_Size_Description'].astype('category').cat.codes
     
     fig = px.parallel_coordinates(df_sample, 
                                   dimensions=['County_Code', 'Sale_Year', 'Sale_Month', 'Price'],
                                   color="Price", 
-                                  title='Multivariate Parallel Coordinates')
-    return fig
+                                  title='Multivariate Parallel Coordinates',
+                                  color_continuous_scale=PREMIUM_SCALE)
+    return update_layout_premium(fig, 'Multivariate Parallel Coordinates')
 
 # Module E: Predictive Modeling
 
@@ -331,98 +359,70 @@ def plot_forecast(train_data, test_data, sarima_mean, sarima_conf_int, arima_mea
     """V22: SARIMA vs ARIMA Forecast Plot"""
     fig = go.Figure()
 
-    # Training Data
+    # Themes: Charcoal, Teal, Saffron
+    # Training Data - Slate
     fig.add_trace(go.Scatter(
-        x=train_data.index, 
-        y=train_data, 
-        mode='lines',
-        name='Training Data',
-        line=dict(color='blue')
+        x=train_data.index, y=train_data, mode='lines+markers', name='Training Data',
+        line=dict(color=PREMIUM_COLOR_SEQUENCE[5], width=2) # Dusty Purple
     ))
 
-    # Actual Test Data
+    # Actual Test Data - Sage Green
     fig.add_trace(go.Scatter(
-        x=test_data.index, 
-        y=test_data, 
-        mode='lines+markers',
-        name='Actual Test Data',
-        line=dict(color='green')
+        x=test_data.index, y=test_data, mode='lines+markers', name='Actual Test Data',
+        line=dict(color=PREMIUM_COLOR_SEQUENCE[6], width=2)
     ))
 
-    # SARIMA Forecast
+    # SARIMA Forecast - Primary Teal
     fig.add_trace(go.Scatter(
-        x=test_data.index, 
-        y=sarima_mean, 
-        mode='lines',
-        name='SARIMA Forecast',
-        line=dict(color='red', dash='dash')
+        x=test_data.index, y=sarima_mean, mode='lines+markers', name='SARIMA Forecast',
+        line=dict(color=PREMIUM_COLOR_SEQUENCE[0], dash='dash', width=2)
     ))
 
     # SARIMA Confidence Interval
-    # Plotly requires filling between traces, so we add the upper bound, then lower bound with fill
     fig.add_trace(go.Scatter(
-        x=test_data.index,
-        y=sarima_conf_int.iloc[:, 1], # Upper
-        mode='lines',
-        line=dict(width=0),
-        showlegend=False,
-        hoverinfo='skip'
+        x=test_data.index, y=sarima_conf_int.iloc[:, 1], # Upper
+        mode='lines', line=dict(width=0), showlegend=False, hoverinfo='skip'
     ))
     
     fig.add_trace(go.Scatter(
-        x=test_data.index,
-        y=sarima_conf_int.iloc[:, 0], # Lower
-        mode='lines',
-        line=dict(width=0),
-        fill='tonexty',
-        fillcolor='rgba(255, 0, 0, 0.2)',
-        name='95% Confidence Interval (SARIMA)',
-        hoverinfo='skip'
+        x=test_data.index, y=sarima_conf_int.iloc[:, 0], # Lower
+        mode='lines', line=dict(width=0), fill='tonexty',
+        fillcolor='rgba(38, 70, 83, 0.2)', # Transparent Primary Teal
+        name='95% Confidence Interval (SARIMA)', hoverinfo='skip'
     ))
 
-    # ARIMA Forecast (Optional)
+    # ARIMA Forecast (Optional) - Sandy Brown
     if arima_mean is not None:
         fig.add_trace(go.Scatter(
-            x=test_data.index, 
-            y=arima_mean, 
-            mode='lines',
-            name='ARIMA Forecast',
-            line=dict(color='purple', dash='dot')
+            x=test_data.index, y=arima_mean, mode='lines', name='ARIMA Forecast',
+            line=dict(color=PREMIUM_COLOR_SEQUENCE[3], dash='dot', width=2)
         ))
 
-    fig.update_layout(
-        title='SARIMA vs ARIMA Model Forecast',
-        xaxis_title='Date',
-        yaxis_title='Mean Price (€)',
-        template='plotly_white',
-        hovermode='x unified'
-    )
-    
-    return fig
+    return update_layout_premium(fig, 'SARIMA vs ARIMA Model Forecast')
 
 # Module F: Clustering Analysis
 
 def plot_cluster_distribution(df, segment_col, title):
     """V23/V25: Cluster Distribution Bar Chart"""
-    if segment_col not in df.columns:
-        return None
+    if segment_col not in df.columns: return None
     df_grouped = df[segment_col].value_counts().reset_index()
     df_grouped.columns = ['Market Segment', 'Count']
-    fig = px.bar(df_grouped, x='Market Segment', y='Count', title=title, color='Market Segment')
-    return fig
+    fig = px.bar(df_grouped, x='Market Segment', y='Count', title=title, 
+                 color='Market Segment', color_discrete_sequence=PREMIUM_COLOR_SEQUENCE)
+    return update_layout_premium(fig, title)
 
 def plot_price_vs_segment_box(df, segment_col, title):
     """V24: Price vs Market Segment Box Plot"""
-    if segment_col not in df.columns:
-        return None
-    # Filter extreme outliers for better visualization if needed, but Plotly box handles them well
-    fig = px.box(df, x=segment_col, y='Price', title=title, color=segment_col)
-    return fig
+    if segment_col not in df.columns: return None
+    fig = px.box(df, x=segment_col, y='Price', title=title, 
+                 color=segment_col, color_discrete_sequence=PREMIUM_COLOR_SEQUENCE)
+    return update_layout_premium(fig, title)
 
 def plot_fuzzy_membership_distribution(df):
     """V26: Fuzzy Membership Distribution"""
-    if 'Max_Membership' not in df.columns:
-        return None
-    fig = px.histogram(df, x='Max_Membership', nbins=50, title='Fuzzy C-Means Membership Strength Distribution',
-                       labels={'Max_Membership': 'Membership Probability'})
-    return fig
+    if 'Max_Membership' not in df.columns: return None
+    fig = px.histogram(df, x='Max_Membership', nbins=50, 
+                       title='Fuzzy C-Means Membership Strength Distribution',
+                       labels={'Max_Membership': 'Membership Probability'},
+                       color_discrete_sequence=[PREMIUM_COLOR_SEQUENCE[1]]) # Secondary Theme Color
+    return update_layout_premium(fig, 'Fuzzy C-Means Membership Strength Distribution')
