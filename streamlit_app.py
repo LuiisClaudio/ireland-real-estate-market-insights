@@ -104,6 +104,94 @@ NAV_STRUCT = {
     }
 }
 
+# Visualization Information
+VIZ_INFO = {
+    "V1: Market Velocity KPI": {
+        "Logic": "Calculates dynamic aggregates based on the user's filtered selection.",
+        "Insight": "Provides an immediate 'pulse' 💓 of the selected market segment."
+    },
+    "V2: Median Price Trend": {
+        "Logic": "Plots the median Price filtered by Sale_Month and Sale_Year.",
+        "Insight": "Visualizes the macro-trend 📈, highlighting the recovery trajectory and inflation peaks."
+    },
+    "V3: Regional Divergence": {
+        "Logic": "Comparison of the top 5 counties by volume.",
+        "Insight": "Demonstrates the decoupling of the Dublin market 🏙️ from the rest of the country."
+    },
+    "V4: Seasonality": {
+        "Logic": "Aggregates total transaction counts by Sale_Month (1-12).",
+        "Insight": "Reveals the 'Spring Bloom' 🌸 (Q2 spike) and 'Winter Lull' ❄️."
+    },
+    "V5: Market Heatmap": {
+        "Logic": "2D matrix of Month vs Year with color intensity as Volume.",
+        "Insight": "Reveals structural breaks 🧱, like the impact of COVID-19 lockdowns."
+    },
+    "V6: Volume-Price Correlation": {
+        "Logic": "Overlays Median Price line and Volume bar chart.",
+        "Insight": "Analyzes the relationship between supply 📦 and price 💰."
+    },
+    "V7: Premium Postcode Ranking": {
+        "Logic": "Ranking top 20 Areas by median price.",
+        "Insight": "Identifies the market's 'Premium' tiers 💎 (e.g., D4, Greystones)."
+    },
+    "V8: National Price Choropleth": {
+        "Logic": "Choropleth map coloring counties by Median Price.",
+        "Insight": "Provides a macro-spatial view of the 'East-West Divide' 🗺️."
+    },
+    "V9: Hyper-Local Scatter Mapbox": {
+        "Logic": "Scatter plot on Mapbox using synthesized coordinates.",
+        "Insight": "Visualizes local density 📍 and price distribution.",
+    },
+    "V10: Urban Density Hexagon": {
+        "Logic": "3D Hexagon layer representing transaction count.",
+        "Insight": "Identifies 'hotspots' 🔥 of activity in urban centers."
+    },
+    "V11: Provincial Treemap": {
+        "Logic": "Hierarchical view: Province -> County.",
+        "Insight": "Shows the relative weight ⚖️ of markets (e.g., Dublin dominance)."
+    },
+    "V12: Price Histogram": {
+        "Logic": "Frequency distribution of Price with outlier filter.",
+        "Insight": "Reveals the skewness 📉 of the market and mass-market affordability."
+    },
+    "V13: Market Tier Donut": {
+        "Logic": "Proportion of stock in price bands (<€320k, etc).",
+        "Insight": "Summarizes market accessibility and affordability 🥯."
+    },
+    "V14: County Variance Box Plots": {
+        "Logic": "Box-and-whisker diagrams of prices by county.",
+        "Insight": "Highlights market heterogeneity and variance 📊 within counties."
+    },
+    "V15: New vs Second-Hand Violin": {
+        "Logic": "Violin plot comparing New vs Second-Hand prices.",
+        "Insight": "Demonstrates the 'New Build Premium' 🏗️."
+    },
+    "V16: Temporal Ridgeline": {
+        "Logic": "Stacked density plots per year.",
+        "Insight": "Visualizes 'Bracket Creep' 🐛 and distribution shifts over time."
+    },
+    "V17: VAT Status Composition": {
+        "Logic": "Breakdown of VAT Exclusive transactions.",
+        "Insight": "Monitors new supply entering the market 🏗️."
+    },
+    "V18: Size Category Stacked Bar": {
+        "Logic": "Counts of Property Size Description per year.",
+        "Insight": "Tracks the changing morphology 🏠 of Irish housing."
+    },
+    "V19: Price vs Size Scatter Matrix": {
+        "Logic": "Price against Size Category.",
+        "Insight": "Validates correlation between floor area 📏 and value."
+    },
+    "V20: Market Composition Sunburst": {
+        "Logic": "Radial hierarchy: Province -> County -> Type.",
+        "Insight": "Allows deep drill-down 🎯 into market composition."
+    },
+    "V21: Multivariate Parallel Coordinates": {
+        "Logic": "Connects variables (County, Size, VAT, Price) with lines.",
+        "Insight": "Reveals common profiles and flows 🌊 across attributes."
+    }
+}
+
 # Sidebar Navigation
 st.sidebar.markdown("---")
 st.sidebar.title("Navigation")
@@ -112,7 +200,15 @@ selected_viz_name = st.sidebar.radio("Select Visualization", list(NAV_STRUCT[sel
 
 # Main Dashboard
 st.title("🇮🇪 Irish Real Estate Market Insights")
-st.markdown(f"**{selected_module}** > *{selected_viz_name}*")
+st.markdown(f"## **{selected_module}**") 
+st.markdown(f"### *{selected_viz_name}*")
+
+# Display Info
+if selected_viz_name in VIZ_INFO:
+    info = VIZ_INFO[selected_viz_name]
+    with st.expander("ℹ️ visualization Logic & Insight", expanded=True):
+        st.markdown(f"**Logic:** {info['Logic']}")
+        st.markdown(f"**Insight:** {info['Insight']}")
 
 if not df.empty:
     viz_func = NAV_STRUCT[selected_module][selected_viz_name]
