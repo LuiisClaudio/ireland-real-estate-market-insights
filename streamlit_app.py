@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import visualization_code as vc
+import machine_learning_module as mlm
+import sarima_model as se
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from statsmodels.tsa.arima.model import ARIMA
 
@@ -31,7 +33,11 @@ def load_data():
         
     return df
 
-import sarima_evaluation as se
+@st.cache_data
+def run_clustering_models(df):
+    """Wrapper for clustering module"""
+    return mlm.run_clustering_models(df)
+
 @st.cache_data
 def run_forecasting_models(df):
     """
@@ -116,6 +122,12 @@ NAV_STRUCT = {
     },
     "Module E: Predictive Modeling": {
         "V22: SARIMA vs ARIMA Forecast": vc.plot_forecast
+    },
+    "Module F: Clustering Analysis": {
+        "V23: K-Means Cluster Distribution": vc.plot_cluster_distribution,
+        "V24: Price vs Market Segment (K-Means)": vc.plot_price_vs_segment_box,
+        "V25: Fuzzy Cluster Distribution": vc.plot_cluster_distribution,
+        "V26: Fuzzy Membership Strength": vc.plot_fuzzy_membership_distribution
     }
 }
 
@@ -208,6 +220,22 @@ VIZ_INFO = {
     "V22: SARIMA vs ARIMA Forecast": {
         "Logic": "Comparison of Seasonal ARIMA vs Standard ARIMA forecasts on a hold-out test set.",
         "Insight": "Evaluates model accuracy and the impact of seasonality on market predictions 🔮."
+    },
+    "V23: K-Means Cluster Distribution": {
+        "Logic": "K-Means clustering (k=5) on Price, Location, and Type.",
+        "Insight": "Segments the market into distinct tiers (Budget to Premium) 🏷️."
+    },
+    "V24: Price vs Market Segment (K-Means)": {
+        "Logic": "Box plot of Price distribution across identified K-Means clusters.",
+        "Insight": "Validates the segmentation by showing distinct price bands 📊."
+    },
+    "V25: Fuzzy Cluster Distribution": {
+        "Logic": "Fuzzy C-Means clustering allowing soft membership.",
+        "Insight": "Compares hard vs soft clustering assignments ☁️."
+    },
+    "V26: Fuzzy Membership Strength": {
+        "Logic": "Histogram of maximum membership probabilities.",
+        "Insight": "Reveals properties that are 'ambiguous' or between segments 🌫️."
     }
 }
 
@@ -278,6 +306,32 @@ if not df.empty:
                         st.plotly_chart(fig, use_container_width=True)
                      except Exception as e:
                         st.error(f"Forecasting failed: {str(e)}")
+
+    # Special handling for Module F (Clustering)
+    elif selected_module == "Module F: Clustering Analysis":
+        with st.spinner("Running Clustering Algorithms on Selected Data..."):
+             # Use the filtered dataframe 'df' instead of 'df_raw'
+             cluster_df, kmeans_model, fcm_model = run_clustering_models(df)
+             
+             if cluster_df.empty:
+                 st.error("Not enough data available for clustering analysis with current filters.")
+             else:
+                 if selected_viz_name == "V23: K-Means Cluster Distribution":
+                     fig = viz_func(cluster_df, 'Market_Segment', 'K-Means Market Segments')
+                 elif selected_viz_name == "V24: Price vs Market Segment (K-Means)":
+                     fig = viz_func(cluster_df, 'Market_Segment', 'Price Distribution by Market Segment (K-Means)')
+                 elif selected_viz_name == "V25: Fuzzy Cluster Distribution":
+                     fig = viz_func(cluster_df, 'Fuzzy_Segment', 'Fuzzy C-Means Market Segments')
+                 elif selected_viz_name == "V26: Fuzzy Membership Strength":
+                     fig = viz_func(cluster_df)
+                 
+                 if fig: st.plotly_chart(fig, use_container_width=True)
+                 
+                 # Display stats table
+                 if selected_viz_name == "V24: Price vs Market Segment (K-Means)":
+                     st.subheader("Segment Statistics")
+                     stats = cluster_df.groupby('Market_Segment')['Price'].describe()
+                     st.dataframe(stats)
 
     # Standard Plotly Charts
     else:

@@ -399,3 +399,30 @@ def plot_forecast(train_data, test_data, sarima_mean, sarima_conf_int, arima_mea
     )
     
     return fig
+
+# Module F: Clustering Analysis
+
+def plot_cluster_distribution(df, segment_col, title):
+    """V23/V25: Cluster Distribution Bar Chart"""
+    if segment_col not in df.columns:
+        return None
+    df_grouped = df[segment_col].value_counts().reset_index()
+    df_grouped.columns = ['Market Segment', 'Count']
+    fig = px.bar(df_grouped, x='Market Segment', y='Count', title=title, color='Market Segment')
+    return fig
+
+def plot_price_vs_segment_box(df, segment_col, title):
+    """V24: Price vs Market Segment Box Plot"""
+    if segment_col not in df.columns:
+        return None
+    # Filter extreme outliers for better visualization if needed, but Plotly box handles them well
+    fig = px.box(df, x=segment_col, y='Price', title=title, color=segment_col)
+    return fig
+
+def plot_fuzzy_membership_distribution(df):
+    """V26: Fuzzy Membership Distribution"""
+    if 'Max_Membership' not in df.columns:
+        return None
+    fig = px.histogram(df, x='Max_Membership', nbins=50, title='Fuzzy C-Means Membership Strength Distribution',
+                       labels={'Max_Membership': 'Membership Probability'})
+    return fig
