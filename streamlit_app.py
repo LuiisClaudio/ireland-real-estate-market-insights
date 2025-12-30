@@ -70,9 +70,15 @@ if not df_raw.empty:
     selected_prop_type_val = prop_type_options[selected_prop_type_label]
 
     # Price Filter
-    min_price = int(df_raw['Price'].min())
-    max_price = int(df_raw['Price'].max())
-    max_price = 1000000
+    Q_inf = df_raw['Price'].quantile(0.05)
+    Q_sup = df_raw['Price'].quantile(0.99)
+    IQR = Q_sup - Q_inf
+
+    lower_bound = int(Q_inf - 1.5 * IQR)
+    upper_bound = int(Q_sup + 1.5 * IQR)
+
+    min_price = lower_bound
+    max_price = upper_bound
     selected_price_range = st.sidebar.slider("Select Price Range (€)", min_price, max_price, (min_price, max_price))
 
     # Apply Filters
