@@ -324,3 +324,78 @@ def plot_parallel_coordinates(df):
                                   color="Price", 
                                   title='Multivariate Parallel Coordinates')
     return fig
+
+# Module E: Predictive Modeling
+
+def plot_forecast(train_data, test_data, sarima_mean, sarima_conf_int, arima_mean=None):
+    """V22: SARIMA vs ARIMA Forecast Plot"""
+    fig = go.Figure()
+
+    # Training Data
+    fig.add_trace(go.Scatter(
+        x=train_data.index, 
+        y=train_data, 
+        mode='lines',
+        name='Training Data',
+        line=dict(color='blue')
+    ))
+
+    # Actual Test Data
+    fig.add_trace(go.Scatter(
+        x=test_data.index, 
+        y=test_data, 
+        mode='lines+markers',
+        name='Actual Test Data',
+        line=dict(color='green')
+    ))
+
+    # SARIMA Forecast
+    fig.add_trace(go.Scatter(
+        x=test_data.index, 
+        y=sarima_mean, 
+        mode='lines',
+        name='SARIMA Forecast',
+        line=dict(color='red', dash='dash')
+    ))
+
+    # SARIMA Confidence Interval
+    # Plotly requires filling between traces, so we add the upper bound, then lower bound with fill
+    fig.add_trace(go.Scatter(
+        x=test_data.index,
+        y=sarima_conf_int.iloc[:, 1], # Upper
+        mode='lines',
+        line=dict(width=0),
+        showlegend=False,
+        hoverinfo='skip'
+    ))
+    
+    fig.add_trace(go.Scatter(
+        x=test_data.index,
+        y=sarima_conf_int.iloc[:, 0], # Lower
+        mode='lines',
+        line=dict(width=0),
+        fill='tonexty',
+        fillcolor='rgba(255, 0, 0, 0.2)',
+        name='95% Confidence Interval (SARIMA)',
+        hoverinfo='skip'
+    ))
+
+    # ARIMA Forecast (Optional)
+    if arima_mean is not None:
+        fig.add_trace(go.Scatter(
+            x=test_data.index, 
+            y=arima_mean, 
+            mode='lines',
+            name='ARIMA Forecast',
+            line=dict(color='purple', dash='dot')
+        ))
+
+    fig.update_layout(
+        title='SARIMA vs ARIMA Model Forecast',
+        xaxis_title='Date',
+        yaxis_title='Mean Price (€)',
+        template='plotly_white',
+        hovermode='x unified'
+    )
+    
+    return fig

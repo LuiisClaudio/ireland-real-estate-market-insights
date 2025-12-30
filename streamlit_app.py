@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import visualization_code as vc
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.tsa.arima.model import ARIMA
 
 # Valid Streamlit page configuration
 st.set_page_config(page_title="Irish Real Estate Market Dashboard", layout="wide")
@@ -28,6 +30,16 @@ def load_data():
         df['Sale_Month'] = df['Date'].dt.month
         
     return df
+
+import sarima_evaluation as se
+@st.cache_data
+def run_forecasting_models(df):
+    """
+    Fits SARIMA and ARIMA models and returns the forecasts.
+    Cached to avoid re-training on every interaction.
+    Wrapper around the logic moved to sarima_evaluation.py
+    """
+    return se.run_forecasting_models(df)
 
 df_raw = load_data()
 
@@ -101,6 +113,9 @@ NAV_STRUCT = {
         "V19: Price vs Size Scatter Matrix": vc.plot_price_vs_size_scatter_matrix,
         "V20: Market Composition Sunburst": vc.plot_market_composition_sunburst,
         "V21: Multivariate Parallel Coordinates": vc.plot_parallel_coordinates
+    },
+    "Module E: Predictive Modeling": {
+        "V22: SARIMA vs ARIMA Forecast": vc.plot_forecast
     }
 }
 
@@ -189,6 +204,10 @@ VIZ_INFO = {
     "V21: Multivariate Parallel Coordinates": {
         "Logic": "Connects variables (County, Size, VAT, Price) with lines.",
         "Insight": "Reveals common profiles and flows 🌊 across attributes."
+    },
+    "V22: SARIMA vs ARIMA Forecast": {
+        "Logic": "Comparison of Seasonal ARIMA vs Standard ARIMA forecasts on a hold-out test set.",
+        "Insight": "Evaluates model accuracy and the impact of seasonality on market predictions 🔮."
     }
 }
 
@@ -240,6 +259,25 @@ if not df.empty:
         st.warning("GeoJSON data required for Choropleth map.")
         chart = viz_func(df)
         if chart: st.plotly_chart(chart, use_container_width=True)
+
+    # Special handling for V22 Forecast
+    elif selected_viz_name == "V22: SARIMA vs ARIMA Forecast":
+        if df.empty:
+            st.warning("Not enough data for forecasting.")
+        else:
+            with st.spinner("Training models and generating forecast... This may take a moment ⏳"):
+                 # Check data sufficiency
+                 if len(df) < 50: # Arbitrary small number check
+                     st.error("Insufficient data points for robust forecasting.")
+                 elif (df['Date'].max() - df['Date'].min()).days < 730:
+                     st.error("Insufficient data duration. Please select a range of at least 2 years.")
+                 else:
+                     try:
+                        train, test, sarima_yx, sarima_ci, arima_yx = run_forecasting_models(df)
+                        fig = viz_func(train, test, sarima_yx, sarima_ci, arima_yx)
+                        st.plotly_chart(fig, use_container_width=True)
+                     except Exception as e:
+                        st.error(f"Forecasting failed: {str(e)}")
 
     # Standard Plotly Charts
     else:
