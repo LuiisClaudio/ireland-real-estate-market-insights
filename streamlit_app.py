@@ -74,7 +74,7 @@ if not df_raw.empty:
     Q_sup = df_raw['Price'].quantile(0.99)
     IQR = Q_sup - Q_inf
 
-    lower_bound = int(Q_inf - 1.5 * IQR)
+    lower_bound = int(Q_inf)
     upper_bound = int(Q_sup + 1.5 * IQR)
 
     min_price = lower_bound
