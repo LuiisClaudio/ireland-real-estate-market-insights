@@ -8,6 +8,8 @@
 ![Scikit-Learn](https://img.shields.io/badge/scikit--learn-F7931E?logo=scikit-learn&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-Active-success)
 
+![Dashboard Screenshot](assets/Screenshot.png)
+
 ## 📊 Project Overview
 
 This project is a comprehensive **Data Analytics & Machine Learning application** designed to uncover deep insights into the Irish Residential Property Market. 
