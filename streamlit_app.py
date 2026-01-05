@@ -8,7 +8,7 @@ from statsmodels.tsa.statespace.sarimax import SARIMAX
 from statsmodels.tsa.arima.model import ARIMA
 
 # Valid Streamlit page configuration
-st.set_page_config(page_title="Irish Real Estate Market Dashboard", layout="wide")
+st.set_page_config(page_title="☘️ Irish Real Estate Market Dashboard", layout="wide")
 
 # Load and Cache Data
 @st.cache_data
