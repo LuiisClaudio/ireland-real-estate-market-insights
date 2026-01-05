@@ -95,254 +95,230 @@ else:
     st.warning("No data loaded.")
     df = pd.DataFrame()
 
-# Navigation Structure
-NAV_STRUCT = {
-    "Module A: Temporal Dynamics": {
-        "V1: Market Velocity KPI": vc.plot_market_velocity_kpi,
-        "V2: Median Price Trend": vc.plot_median_price_trend,
-        "V3: Regional Divergence": vc.plot_regional_divergence,
-        "V4: Seasonality": vc.plot_seasonality,
-        "V5: Market Heatmap": vc.plot_market_heatmap,
-        "V6: Volume-Price Correlation": vc.plot_volume_price_correlation
-    },
-    "Module B: Geospatial Intelligence": {
-        "V7: Premium Postcode Ranking": vc.plot_premium_postcode_ranking,
-        "V8: National Price Choropleth": vc.plot_national_price_choropleth, # Placeholder
-        "V9: Hyper-Local Scatter Mapbox": vc.plot_hyper_local_scatter,
-        "V10: Urban Density Hexagon": vc.plot_urban_density_hexagon,
-        "V11: Provincial Treemap": vc.plot_provincial_treemap
-    },
-    "Module C: Distribution & Affordability": {
-        "V12: Price Histogram": vc.plot_price_histogram,
-        "V13: Market Tier Donut": vc.plot_market_tier_donut,
-        "V14: County Variance Box Plots": vc.plot_county_variance_box,
-        "V15: New vs Second-Hand Violin": vc.plot_new_vs_secondhand_violin,
-        "V16: Temporal Ridgeline": vc.plot_temporal_ridgeline
-    },
-    "Module D: Attribute Correlations": {
-        "V17: VAT Status Composition": vc.plot_vat_status_composition,
-        "V18: Size Category Stacked Bar": vc.plot_size_category_stacked_bar,
-        "V19: Price vs Size Scatter Matrix": vc.plot_price_vs_size_scatter_matrix,
-        "V20: Market Composition Sunburst": vc.plot_market_composition_sunburst,
-        "V21: Multivariate Parallel Coordinates": vc.plot_parallel_coordinates
-    },
-    "Module E: Predictive Modeling": {
-        "V22: SARIMA vs ARIMA Forecast": vc.plot_forecast
-    },
-    "Module F: Clustering Analysis": {
-        "V23: K-Means Cluster Distribution": vc.plot_cluster_distribution,
-        "V24: Price vs Market Segment (K-Means)": vc.plot_price_vs_segment_box,
-        "V25: Fuzzy Cluster Distribution": vc.plot_cluster_distribution,
-        "V26: Fuzzy Membership Strength": vc.plot_fuzzy_membership_distribution
-    }
-}
-
-# Visualization Information
-VIZ_INFO = {
-    "V1: Market Velocity KPI": {
-        "Logic": "Calculates dynamic aggregates based on the user's filtered selection.",
-        "Insight": "Provides an immediate 'pulse' 💓 of the selected market segment."
-    },
-    "V2: Median Price Trend": {
-        "Logic": "Plots the median Price filtered by Sale_Month and Sale_Year.",
-        "Insight": "Visualizes the macro-trend 📈, highlighting the recovery trajectory and inflation peaks."
-    },
-    "V3: Regional Divergence": {
-        "Logic": "Comparison of the top 5 counties by volume.",
-        "Insight": "Demonstrates the decoupling of the Dublin market 🏙️ from the rest of the country."
-    },
-    "V4: Seasonality": {
-        "Logic": "Aggregates total transaction counts by Sale_Month (1-12).",
-        "Insight": "Reveals the 'Spring Bloom' 🌸 (Q2 spike) and 'Winter Lull' ❄️."
-    },
-    "V5: Market Heatmap": {
-        "Logic": "2D matrix of Month vs Year with color intensity as Volume.",
-        "Insight": "Reveals structural breaks 🧱, like the impact of COVID-19 lockdowns."
-    },
-    "V6: Volume-Price Correlation": {
-        "Logic": "Overlays Median Price line and Volume bar chart.",
-        "Insight": "Analyzes the relationship between supply 📦 and price 💰."
-    },
-    "V7: Premium Postcode Ranking": {
-        "Logic": "Ranking top 20 Areas by median price.",
-        "Insight": "Identifies the market's 'Premium' tiers 💎 (e.g., D4, Greystones)."
-    },
-    "V8: National Price Choropleth": {
-        "Logic": "Choropleth map coloring counties by Median Price.",
-        "Insight": "Provides a macro-spatial view of the 'East-West Divide' 🗺️."
-    },
-    "V9: Hyper-Local Scatter Mapbox": {
-        "Logic": "Scatter plot on Mapbox using synthesized coordinates.",
-        "Insight": "Visualizes local density 📍 and price distribution.",
-    },
-    "V10: Urban Density Hexagon": {
-        "Logic": "3D Hexagon layer representing transaction count.",
-        "Insight": "Identifies 'hotspots' 🔥 of activity in urban centers."
-    },
-    "V11: Provincial Treemap": {
-        "Logic": "Hierarchical view: Province -> County.",
-        "Insight": "Shows the relative weight ⚖️ of markets (e.g., Dublin dominance)."
-    },
-    "V12: Price Histogram": {
-        "Logic": "Frequency distribution of Price with outlier filter.",
-        "Insight": "Reveals the skewness 📉 of the market and mass-market affordability."
-    },
-    "V13: Market Tier Donut": {
-        "Logic": "Proportion of stock in price bands (<€320k, etc).",
-        "Insight": "Summarizes market accessibility and affordability 🥯."
-    },
-    "V14: County Variance Box Plots": {
-        "Logic": "Box-and-whisker diagrams of prices by county.",
-        "Insight": "Highlights market heterogeneity and variance 📊 within counties."
-    },
-    "V15: New vs Second-Hand Violin": {
-        "Logic": "Violin plot comparing New vs Second-Hand prices.",
-        "Insight": "Demonstrates the 'New Build Premium' 🏗️."
-    },
-    "V16: Temporal Ridgeline": {
-        "Logic": "Stacked density plots per year.",
-        "Insight": "Visualizes 'Bracket Creep' 🐛 and distribution shifts over time."
-    },
-    "V17: VAT Status Composition": {
-        "Logic": "Breakdown of VAT Exclusive transactions.",
-        "Insight": "Monitors new supply entering the market 🏗️."
-    },
-    "V18: Size Category Stacked Bar": {
-        "Logic": "Counts of Property Size Description per year.",
-        "Insight": "Tracks the changing morphology 🏠 of Irish housing."
-    },
-    "V19: Price vs Size Scatter Matrix": {
-        "Logic": "Price against Size Category.",
-        "Insight": "Validates correlation between floor area 📏 and value."
-    },
-    "V20: Market Composition Sunburst": {
-        "Logic": "Radial hierarchy: Province -> County -> Type.",
-        "Insight": "Allows deep drill-down 🎯 into market composition."
-    },
-    "V21: Multivariate Parallel Coordinates": {
-        "Logic": "Connects variables (County, Size, VAT, Price) with lines.",
-        "Insight": "Reveals common profiles and flows 🌊 across attributes."
-    },
-    "V22: SARIMA vs ARIMA Forecast": {
-        "Logic": "Comparison of Seasonal ARIMA vs Standard ARIMA forecasts on a hold-out test set.",
-        "Insight": "Evaluates model accuracy and the impact of seasonality on market predictions 🔮."
-    },
-    "V23: K-Means Cluster Distribution": {
-        "Logic": "K-Means clustering (k=5) on Price, Location, and Type.",
-        "Insight": "Segments the market into distinct tiers (Budget to Premium) 🏷️."
-    },
-    "V24: Price vs Market Segment (K-Means)": {
-        "Logic": "Box plot of Price distribution across identified K-Means clusters.",
-        "Insight": "Validates the segmentation by showing distinct price bands 📊."
-    },
-    "V25: Fuzzy Cluster Distribution": {
-        "Logic": "Fuzzy C-Means clustering allowing soft membership.",
-        "Insight": "Compares hard vs soft clustering assignments ☁️."
-    },
-    "V26: Fuzzy Membership Strength": {
-        "Logic": "Histogram of maximum membership probabilities.",
-        "Insight": "Reveals properties that are 'ambiguous' or between segments 🌫️."
-    }
+# Navigation Structure - Groups of Visualizations
+MODULES = {
+    "Module A: Temporal Dynamics": "Analysis of market trends, velocity, and seasonal patterns over time.",
+    "Module B: Geospatial Intelligence": "Geographic distribution of prices, volume, and density across Ireland.",
+    "Module C: Distribution & Affordability": "Deep dive into price segments, affordability tiers, and property variations.",
+    "Module D: Attribute Correlations": "Exploring relationships between property features like size, type, and VAT status.",
+    "Module E: Predictive Modeling": "Forecasting future market trends using SARIMA and ARIMA models.",
+    "Module F: Clustering Analysis": "Advanced market segmentation using K-Means and Fuzzy C-Means algorithms."
 }
 
 # Sidebar Navigation
 st.sidebar.markdown("---")
 st.sidebar.title("Navigation")
-selected_module = st.sidebar.selectbox("Select Module", list(NAV_STRUCT.keys()))
-selected_viz_name = st.sidebar.radio("Select Visualization", list(NAV_STRUCT[selected_module].keys()))
+selected_module = st.sidebar.radio("Select Module", list(MODULES.keys()))
 
 # Main Dashboard
 st.title("🇮🇪 Irish Real Estate Market Insights")
 st.markdown(f"## **{selected_module}**") 
-st.markdown(f"### *{selected_viz_name}*")
+st.markdown(f"*{MODULES[selected_module]}*")
+st.markdown("---")
 
-# Display Info
-if selected_viz_name in VIZ_INFO:
-    info = VIZ_INFO[selected_viz_name]
-    with st.expander("ℹ️ visualization Logic & Insight", expanded=True):
-        st.markdown(f"**Logic:** {info['Logic']}")
-        st.markdown(f"**Insight:** {info['Insight']}")
+# Display Info Helper
+def display_story_segment(title, logic, insight):
+    with st.expander(f"ℹ️ {title} - Insights", expanded=False):
+        st.markdown(f"**Logic:** {logic}")
+        st.markdown(f"**Insight:** {insight}")
 
-if not df.empty:
-    viz_func = NAV_STRUCT[selected_module][selected_viz_name]
-
-    # Special handling for V1 (KPI) which returns nothing but renders inside function
-    if selected_viz_name == "V1: Market Velocity KPI":
-        viz_func(df)
-        
-    # Special handling for V12 (needs extra widget)
-    elif selected_viz_name == "V12: Price Histogram":
-        max_price_filter = st.slider("Filter Max Price for Histogram", 100000, 2000000, 1000000, step=50000)
-        fig = viz_func(df, max_price=max_price_filter)
-        st.plotly_chart(fig, use_container_width=True)
-
-    # Special handling for Maps (V9, V10)
-    elif selected_viz_name in ["V9: Hyper-Local Scatter Mapbox", "V10: Urban Density Hexagon"]:
-        st.info("Note: Latitude/Longitude data is required for this visualization.")
-        chart = viz_func(df)
-        if chart:
-            if selected_viz_name == "V9: Hyper-Local Scatter Mapbox":
-                st.plotly_chart(chart, use_container_width=True)
-            else:
-                st.pydeck_chart(chart)
-        else:
-            st.warning(f"Geolocation data not available for {selected_viz_name}.")
-
-    # Special handling for V8 (Placeholder)
-    elif selected_viz_name == "V8: National Price Choropleth":
-        st.warning("GeoJSON data required for Choropleth map.")
-        chart = viz_func(df)
-        if chart: st.plotly_chart(chart, use_container_width=True)
-
-    # Special handling for V22 Forecast
-    elif selected_viz_name == "V22: SARIMA vs ARIMA Forecast":
-        if df.empty:
-            st.warning("Not enough data for forecasting.")
-        else:
-            with st.spinner("Training models and generating forecast... This may take a moment ⏳"):
-                 # Check data sufficiency
-                 if len(df) < 50: # Arbitrary small number check
-                     st.error("Insufficient data points for robust forecasting.")
-                 elif (df['Date'].max() - df['Date'].min()).days < 730:
-                     st.error("Insufficient data duration. Please select a range of at least 2 years.")
-                 else:
-                     try:
-                        train, test, sarima_yx, sarima_ci, arima_yx = run_forecasting_models(df)
-                        fig = viz_func(train, test, sarima_yx, sarima_ci, arima_yx)
-                        st.plotly_chart(fig, use_container_width=True)
-                     except Exception as e:
-                        st.error(f"Forecasting failed: {str(e)}")
-
-    # Special handling for Module F (Clustering)
-    elif selected_module == "Module F: Clustering Analysis":
-        with st.spinner("Running Clustering Algorithms on Selected Data..."):
-             # Use the filtered dataframe 'df' instead of 'df_raw'
-             cluster_df, kmeans_model, fcm_model = run_clustering_models(df)
-             
-             if cluster_df.empty:
-                 st.error("Not enough data available for clustering analysis with current filters.")
-             else:
-                 if selected_viz_name == "V23: K-Means Cluster Distribution":
-                     fig = viz_func(cluster_df, 'Market_Segment', 'K-Means Market Segments')
-                 elif selected_viz_name == "V24: Price vs Market Segment (K-Means)":
-                     fig = viz_func(cluster_df, 'Market_Segment', 'Price Distribution by Market Segment (K-Means)')
-                 elif selected_viz_name == "V25: Fuzzy Cluster Distribution":
-                     fig = viz_func(cluster_df, 'Fuzzy_Segment', 'Fuzzy C-Means Market Segments')
-                 elif selected_viz_name == "V26: Fuzzy Membership Strength":
-                     fig = viz_func(cluster_df)
-                 
-                 if fig: st.plotly_chart(fig, use_container_width=True)
-                 
-                 # Display stats table
-                 if selected_viz_name == "V24: Price vs Market Segment (K-Means)":
-                     st.subheader("Segment Statistics")
-                     stats = cluster_df.groupby('Market_Segment')['Price'].describe()
-                     st.dataframe(stats)
-
-    # Standard Plotly Charts
-    else:
-        fig = viz_func(df)
-        if fig:
-            st.plotly_chart(fig, use_container_width=True)
+if df.empty:
+    st.warning("Please adjust filters to view data.")
 else:
-    st.write("Please adjust filters to view data.")
+    # --- MODULE A: TEMPORAL DYNAMICS ---
+    if selected_module == "Module A: Temporal Dynamics":
+        st.markdown("### ⏱️ Market Velocity & Trends")
+        
+        # Row 1: KPI
+        st.markdown("#### Market Velocity")
+        display_story_segment("V1: Market Velocity KPI", "Dynamic sums/medians based on selection.", "Immediate pulse 💓 of the market.")
+        vc.plot_market_velocity_kpi(df)
+        st.markdown("---")
+
+        # Row 2: Trends
+        st.markdown("#### Price & Volume Trends")
+        col1, col2 = st.columns(2)
+        with col1:
+             display_story_segment("V2: Median Price Trend", "Median Price filtered by Month/Year.", "Macro-recovery trajectory 📈.")
+             st.plotly_chart(vc.plot_median_price_trend(df), use_container_width=True)
+        with col2:
+             display_story_segment("V6: Volume-Price Correlation", "Median Price vs Volume.", "Supply 📦 vs Price 💰 dynamics.")
+             st.plotly_chart(vc.plot_volume_price_correlation(df), use_container_width=True)
+
+        # Row 3: Seasonality & Heatmap
+        st.markdown("#### Seasonal Patterns")
+        col3, col4 = st.columns(2)
+        with col3:
+            display_story_segment("V4: Seasonality", "Transactions by Month.", "Spring Bloom 🌸 vs Winter Lull ❄️.")
+            st.plotly_chart(vc.plot_seasonality(df), use_container_width=True)
+        with col4:
+            display_story_segment("V5: Market Heatmap", "2D Matrix of Activity.", "Structural breaks like COVID-19 🧱.")
+            st.plotly_chart(vc.plot_market_heatmap(df), use_container_width=True)
+
+        # Row 4: Divergence
+        st.markdown("#### Regional Performance")
+        display_story_segment("V3: Regional Divergence", "Top 5 Counties comparison.", "Decoupling of Dublin market 🏙️.")
+        st.plotly_chart(vc.plot_regional_divergence(df), use_container_width=True)
+
+    # --- MODULE B: GEOSPATIAL INTELLIGENCE ---
+    elif selected_module == "Module B: Geospatial Intelligence":
+        st.markdown("### 🗺️ Geographic Market Analysis")
+
+        # Row 1: High Level Maps
+        st.markdown("#### National Overview")
+        col1, col2 = st.columns(2)
+        with col1:
+            display_story_segment("V8: National Price Scatter", "Mean Price by County.", "East-West Divide 🗺️.")
+            fig_v8 = vc.plot_national_price_choropleth(df)
+            if fig_v8: st.plotly_chart(fig_v8, use_container_width=True)
+            else: st.warning("Geo data missing.")
+        with col2:
+            display_story_segment("V11: Provincial Treemap", "Hierarchy: Province -> County.", "Relative market weights ⚖️.")
+            st.plotly_chart(vc.plot_provincial_treemap(df), use_container_width=True)
+
+        # Row 2: Rankings
+        st.markdown("#### Premium Areas")
+        display_story_segment("V7: Premium Postcode Ranking", "Top 20 Areas by Price.", "Identifies 'Premium' tiers 💎.")
+        st.plotly_chart(vc.plot_premium_postcode_ranking(df), use_container_width=True)
+
+        # Row 3: Detailed Maps
+        st.markdown("#### Hyper-Local Density")
+        st.info("Note: These Visualizations require Latitude/Longitude data.")
+        col3, col4 = st.columns(2)
+        with col3:
+             display_story_segment("V9: Hyper-Local Scatter", "Scatter on Mapbox.", "Local density 📍 and prices.")
+             fig_v9 = vc.plot_hyper_local_scatter(df)
+             if fig_v9: st.plotly_chart(fig_v9, use_container_width=True)
+             else: st.warning("Latitude/Longitude data missing.")
+        with col4:
+             display_story_segment("V10: Urban Density Hexagon", "3D Hexagon Layer.", "Hotspots 🔥 of activity.")
+             deck_v10 = vc.plot_urban_density_hexagon(df)
+             if deck_v10: st.pydeck_chart(deck_v10)
+             else: st.warning("Latitude/Longitude data missing.")
+
+    # --- MODULE C: DISTRIBUTION & AFFORDABILITY ---
+    elif selected_module == "Module C: Distribution & Affordability":
+        st.markdown("### 💰 Price Distribution & Affordability")
+
+        # Row 1: Distribution
+        col1, col2 = st.columns(2)
+        with col1:
+             display_story_segment("V12: Price Histogram", "Price Frequency with Filter.", "Market skewness and affordability 📉.")
+             max_p = st.slider("Filter Max Price", 100000, 2000000, 1000000, step=50000, key="v12_slider")
+             st.plotly_chart(vc.plot_price_histogram(df, max_price=max_p), use_container_width=True)
+        with col2:
+             display_story_segment("V13: Market Tier Donut", "Price Bands Proportion.", "Market accessibility 🥯.")
+             st.plotly_chart(vc.plot_market_tier_donut(df), use_container_width=True)
+        
+        # Row 2: Variance
+        st.markdown("#### Variability Analysis")
+        display_story_segment("V14: County Variance", "Box Plots by County.", "Market heterogeneity 📊.")
+        st.plotly_chart(vc.plot_county_variance_box(df), use_container_width=True)
+
+        # Row 3: Comparisons
+        col3, col4 = st.columns(2)
+        with col3:
+             display_story_segment("V15: New vs Second-Hand", "Violin Plot Comparison.", "New Build Premium 🏗️.")
+             st.plotly_chart(vc.plot_new_vs_secondhand_violin(df), use_container_width=True)
+        with col4:
+             display_story_segment("V16: Temporal Ridgeline", "Density per Year.", "Bracket Creep 🐛 over time.")
+             st.plotly_chart(vc.plot_temporal_ridgeline(df), use_container_width=True)
+
+    # --- MODULE D: ATTRIBUTE CORRELATIONS ---
+    elif selected_module == "Module D: Attribute Correlations":
+        st.markdown("### 🏠 Property Attributes & Composition")
+
+        # Row 1: Composition
+        col1, col2 = st.columns(2)
+        with col1:
+            display_story_segment("V17: VAT Status", "New vs Existing Supply.", "New supply entering market 🏗️.")
+            st.plotly_chart(vc.plot_vat_status_composition(df), use_container_width=True)
+        with col2:
+            display_story_segment("V20: Market Composition", "Sunburst Hierarchy.", "Deep drill-down 🎯.")
+            st.plotly_chart(vc.plot_market_composition_sunburst(df), use_container_width=True)
+
+        # Row 2: Size Analysis
+        st.markdown("#### Size vs Value Analysis")
+        col3, col4 = st.columns(2)
+        with col3:
+             display_story_segment("V18: Size Category Stacked", "Size Counts per Year.", "Changing morphology 🏠.")
+             st.plotly_chart(vc.plot_size_category_stacked_bar(df), use_container_width=True)
+        with col4:
+             # V19 is Scatter Matrix, might be big
+             display_story_segment("V19: Price vs Size", "Scatter Matrix.", "Correlation floor area 📏 vs value.")
+             st.plotly_chart(vc.plot_price_vs_size_scatter_matrix(df), use_container_width=True)
+        
+        # Row 3: Multivariate
+        st.markdown("#### Multivariate Flows")
+        display_story_segment("V21: Parallel Coordinates", "Connecting variables.", "Common profiles and flows 🌊.")
+        st.plotly_chart(vc.plot_parallel_coordinates(df), use_container_width=True)
+
+    # --- MODULE E: PREDICTIVE MODELING ---
+    elif selected_module == "Module E: Predictive Modeling":
+        st.markdown("### 🔮 Future Market Forecast")
+        st.markdown("""
+        **Objective:** To predict future market trends and evaluate the importance of seasonality in real estate pricing.
+        
+        We compare two models:
+        *   **ARIMA (AutoRegressive Integrated Moving Average):** A standard model that looks at past trends.
+        *   **SARIMA (Seasonal ARIMA):** Adds a 'seasonality' component to account for recurring yearly patterns (e.g., the 'Spring Bloom').
+        
+        *Why this matters:* If SARIMA outperforms ARIMA, it confirms that market cycles are predictable, allowing for better timing of buying/selling decisions.
+        """)
+        st.info("Forecasting requires significant historical data. Best viewed with 'All' years selected.")
+        
+        display_story_segment("V22: SARIMA vs ARIMA", "Seasonal vs Standard ARIMA on hold-out.", "Model accuracy predictions 🔮.")
+
+        if len(df) < 50:
+             st.error("Insufficient data points for robust forecasting.")
+        else:
+             with st.spinner("Training models and generating forecast... This may take a moment ⏳"):
+                 try:
+                    train, test, sarima_yx, sarima_ci, arima_yx = run_forecasting_models(df)
+                    st.plotly_chart(vc.plot_forecast(train, test, sarima_yx, sarima_ci, arima_yx), use_container_width=True)
+                 except Exception as e:
+                    st.error(f"Forecasting failed: {str(e)}")
+
+    # --- MODULE F: CLUSTERING ANALYSIS ---
+    elif selected_module == "Module F: Clustering Analysis":
+        st.markdown("### 🧩 Advanced Market Segmentation")
+        st.markdown("""
+        **Objective:** To move beyond simple price bands and discover 'natural' groupings of properties based on their features (Price, Location, Type).
+        """)
+        
+        with st.spinner("Running Clustering Algorithms..."):
+             cluster_df, kmeans_model, fcm_model = run_clustering_models(df)
+
+        if cluster_df.empty:
+             st.error("Not enough data for clustering.")
+        else:
+            # Row 1: K-Means
+            st.markdown("#### 1. K-Means Segmentation (Hard Clustering)")
+            st.markdown("""
+            *Intention:* To categorize the market into distinct, non-overlapping tiers (e.g., 'Economy', 'Mid-Market', 'Premium'). 
+            This helps in understanding the primary market structure and identifying which segment a property definitely belongs to.
+            """)
+            col1, col2 = st.columns(2)
+            with col1:
+                display_story_segment("V23: K-Means Distribution", "Counts per Segment.", "Distinct tiers (Budget to Premium) 🏷️.")
+                st.plotly_chart(vc.plot_cluster_distribution(cluster_df, 'Market_Segment', 'K-Means Market Segments'), use_container_width=True)
+            with col2:
+                display_story_segment("V24: Price vs Segment", "Box Plot by Segment.", "Validating segmentation 📊.")
+                st.plotly_chart(vc.plot_price_vs_segment_box(cluster_df, 'Market_Segment', 'Price Distribution by Market Segment'), use_container_width=True)
+                
+            with st.expander("Show Segment Statistics"):
+                st.dataframe(cluster_df.groupby('Market_Segment')['Price'].describe())
+
+            # Row 2: Fuzzy C-Means
+            st.markdown("#### 2. Fuzzy C-Means (Soft Clustering)")
+            st.markdown("""
+            *Intention:* Real estate isn't always black and white. A property might be 'mostly' Luxury but have some 'Mid-Market' characteristics.
+            **Fuzzy Clustering** assigns probabilities (e.g., 70% Premium, 30% Mid-Market), allowing us to find 'bridge' properties or edge cases that K-Means might misclassify.
+            """)
+            col3, col4 = st.columns(2)
+            with col3:
+                 display_story_segment("V25: Fuzzy Distribution", "Counts per Fuzzy Segment.", "Soft membership assignments ☁️.")
+                 st.plotly_chart(vc.plot_cluster_distribution(cluster_df, 'Fuzzy_Segment', 'Fuzzy C-Means Market Segments'), use_container_width=True)
+            with col4:
+                 display_story_segment("V26: Membership Strength", "Histogram of Probability.", "Ambiguous properties 🌫️.")
+                 st.plotly_chart(vc.plot_fuzzy_membership_distribution(cluster_df), use_container_width=True)

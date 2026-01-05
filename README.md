@@ -1,5 +1,7 @@
 # 🇮🇪 Ireland Real Estate Market Insights Dashboard
 
+## Dashboard Link: https://irish-real-estate-market.streamlit.app/
+
 ![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white)
 ![Plotly](https://img.shields.io/badge/Plotly-3F4F75?logo=plotly&logoColor=white)
@@ -20,35 +22,42 @@ Built with **Python** and **Streamlit**, it serves as an interactive portfolio p
 
 ## 🚀 Key Modules & Analytical Features
 
-The dashboard is structured into 6 strategic modules, each targeting specific analytical questions:
+The dashboard is redefined into **6 narrative modules**, designed to guide the user from macro-trends to micro-insights:
 
-### 1. 📈 Temporal Dynamics
-*   **Market Velocity KPI**: Real-time pulse of market activity.
-*   **Seasonality Analysis**: Identifying the "Spring Bloom" and "Winter Lull" cycles in transaction volumes.
-*   **Volume-Price Correlation**: Analyzing the supply-demand elasticity.
+### 1. ⏱️ Module A: Temporal Dynamics
+*Focus: How has the market evolved over time?*
+*   **Market Velocity KPI**: Immediate pulse of the market (Volume, Price, Units).
+*   **Trend Analysis**: Tracking the median price recovery and supply-demand elasticity (Volume-Price Correlation).
+*   **Seasonality & Heatmaps**: Visualizing the "Spring Bloom" and structural market breaks (e.g., COVID-19 lockdowns).
+*   **Regional Divergence**: Contrasting Dublin's performance against top counties.
 
-### 2. 🗺️ Geospatial Intelligence
-*   **Hyper-Local Scatter Maps**: Visualizing price density at a granular level.
-*   **National Choropleths**: highlighting the East-West economic divide.
-*   **Urban H3 Hexagons**: 3D density visualization of transaction hotspots.
+### 2. 🗺️ Module B: Geospatial Intelligence
+*Focus: Where is the value concentrated?*
+*   **National Overview**: East-West economic divide visualized via Scatter Maps and Provincial Treemaps.
+*   **Premium Rankings**: Identifying the top 20 most expensive postcodes/areas.
+*   **Hyper-Local Density**: 3D Hexagon layers and Mapbox scatters identifying urban "hotspots" and price clusters.
 
-### 3. 💰 Distribution & Affordability
-*   **Market Tier Analysis**: Breaking down inventory by price bands (Budget vs. Premium).
-*   **New vs. Second-Hand**: Violin plots analyzing the "New Build Premium".
+### 3. 💰 Module C: Distribution & Affordability
+*Focus: How accessible is the market?*
+*   **Affordability Tiers**: Breaking down inventory into 'Starter', 'Middle', and 'Premium' segments.
+*   **Variance Analysis**: Box plots revealing price heterogeneity within counties.
+*   **Comparative Stats**: "New Build Premium" (Violin plots) and "Bracket Creep" over time (Ridgeline plots).
 
-### 4. 🔗 Attribute Correlations
-*   **Multivariate Parallel Coordinates**: Tracing flows between County, Size, and Price.
-*   **Market Composition**: Sunburst charts for hierarchical data exploration.
+### 4. 🏠 Module D: Attribute Correlations
+*Focus: What drives property value?*
+*   **Property Composition**: Sunburst charts exploring the hierarchy of Province -> County -> Type.
+*   **Size & VAT**: Analyzing the impact of floor area and new supply (VAT status) on pricing.
+*   **Multivariate Flows**: Parallel coordinate plots tracing common property profiles.
 
-### 5. 🔮 Predictive Modeling (Time Series)
-*   **SARIMA vs ARIMA**: 
-    *   Implemented **Seasonal ARIMA (SARIMA)** to account for the strong seasonal components in real estate data.
-    *   Performed stationarity checks and differencing ($d=1$) to ensure robust model performance.
-    *   **Metric**: Evaluated models using RMSE and MAE on a hold-out test set.
+### 5. 🔮 Module E: Predictive Modeling
+*Focus: Where is the market heading?*
+*   **ARIMA vs. SARIMA**: Comparing standard trend models against **Seasonal ARIMA** to prove the predictability of market cycles.
+*   **Forecast**: Generating future price confidence intervals to aid decision-making.
 
-### 6. 🤖 Clustering Analysis (Machine Learning)
-*   **K-Means Clustering**: Segmented properties into distinct classes (e.g., "Economy", "Mid-Market", "Premium") based on Price and Location.
-*   **Fuzzy C-Means**: Analyzed edge cases where properties exhibit characteristics of multiple segments (soft clustering).
+### 6. � Module F: Clustering Analysis
+*Focus: Can we find hidden market segments?*
+*   **K-Means (Hard Clustering)**: Mathematically defining distinct market tiers (e.g., Economy vs. Luxury) based on price and location.
+*   **Fuzzy C-Means (Soft Clustering)**: Identifying "bridge" properties that don't fit perfectly into one box, revealing the nuance of edge cases.
 
 ---
 
